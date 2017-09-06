@@ -6,6 +6,7 @@
 //! Date --- 06/09/2017
 
 use std::string::String;
+use super::{HTTP, ErrorToHTTP};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 /// A `HeaderField` defines a `name:value` association in the header section of a HTTP message.
@@ -53,6 +54,12 @@ impl HeaderField {
     }
 }
 
+impl HTTP for HeaderField {
+    fn to_http(&self) -> Result<String, ErrorToHTTP> {
+        Ok(format!("{}:{}", self.name, self.value))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -76,6 +83,7 @@ mod tests {
             },
             "Test HeaderField::from-2 failed."
         );
+        
         assert_eq!(
             HeaderField::from(" header1 : field1 ").unwrap(),
             HeaderField {
@@ -83,6 +91,12 @@ mod tests {
                 value: String::from("field1")
             },
             "Test HeaderField::from-3 failed."
+        );
+        
+        assert_eq!(
+            HeaderField::from(" header1 : field1 ").unwrap().to_http().unwrap(),
+            "header1:field1",
+            "Test HeaderField::from-4 failed."
         );
     }
 }

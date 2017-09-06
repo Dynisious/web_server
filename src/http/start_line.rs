@@ -6,7 +6,7 @@
 //! Date --- 06/09/2017
 
 use std::string::String;
-use super::HTTP_METHOD;
+use super::{HTTP, ErrorToHTTP, HTTP_METHOD};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 /// A `StartLine` is the first line of a HTTP message defining how the message should be treated.
@@ -144,6 +144,26 @@ impl StartLine {
     }
 }
 
+impl HTTP for StartLine {
+    fn to_http(&self) -> Result<String, ErrorToHTTP> {
+        match self {
+            &StartLine::RequestLine {
+                ref method,
+                ref target,
+                ref version
+            } => Ok(format!("{} \"{}\" {}", method, target, version)),
+            &StartLine::StatusLine {
+                ref version,
+                ref code,
+                ref reason
+            } => match reason {
+                &Some(ref s) => Ok(format!("{} {} {}", version, code, s)),
+                &None => Ok(format!("{} {}", version, code))
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -220,6 +240,18 @@ mod tests {
                 reason: None
             },
             "Test StatusLine::from-4 failed."
+        );
+        
+        assert_eq!(
+            StartLine::from("http/2.1 012").unwrap().to_http().unwrap(),
+            "HTTP/2.1 12",
+            "Test StatusLine::from-5 failed."
+        );
+        
+        assert_eq!(
+            StartLine::from("http/2.1 012 With reason to be stringified.").unwrap().to_http().unwrap(),
+            "HTTP/2.1 12 With reason to be stringified.",
+            "Test StatusLine::from-6 failed."
         );
     }
 }

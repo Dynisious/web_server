@@ -7,6 +7,7 @@
 //! Date --- 06/09/2017
 
 use std::string::String;
+use super::{HTTP, ErrorToHTTP};
 use super::header_field::*;
 use super::start_line::*;
 
@@ -50,7 +51,7 @@ impl MessageHTTP {
             }
         } else {
             // There was no first line in lines.
-            return Err(format!("Bad Message string, no Start line: `{}`", msg));
+            return Err(format!("Bad Message string, no Start line: `{}`", msg).to_owned());
         };
         
         // Get all the header fields from the message and convert them all.
@@ -111,6 +112,28 @@ impl MessageHTTP {
             Ok(s) => MessageHTTP::from(s.as_str()),
             Err(_) => Err(String::from("Bad bytes for utf8 encoded message."))
         }
+    }
+}
+
+impl HTTP for MessageHTTP {
+    fn to_http(&self) -> Result<String, ErrorToHTTP> {
+        let mut res = format!("{}\r\n", self.start_line.to_http().unwrap()).to_owned();
+        
+        for field in self.header_fields.iter() {
+            res.push_str(&format!("{}\r\n", field.to_http().unwrap()));
+        }
+        
+        if self.message_body.is_empty() {
+            return Ok(res);
+        } else {
+            res.push_str("\r\n");
+        }
+        
+        match String::from_utf8(self.message_body.clone()) {
+            Ok(s) => res.push_str(&s),
+            Err(_) => return Err(ErrorToHTTP)
+        }
+        Ok(res)
     }
 }
 
@@ -233,6 +256,15 @@ mod tests {
                 message_body: String::from(" The quick brown fox\r\njumped over the lazy dog.").into_bytes()
             },
             "Test MessageHTTP::from-5 failed."
+        );
+        
+        assert_eq!(
+            MessageHTTP::from("get / http/1.1\r\n name : value \r\n taste : smell \r\n\r\n The quick brown fox\r\njumped over the lazy dog.")
+                .unwrap()
+                .to_http()
+                .unwrap(),
+            "GET \"/\" HTTP/1.1\r\nname:value\r\ntaste:smell\r\n\r\n The quick brown fox\r\njumped over the lazy dog.",
+            "Test MessageHTTP::from-6 failed."
         );
     }
 }
