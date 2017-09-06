@@ -13,7 +13,7 @@ use super::start_line::*;
 #[derive(Clone, PartialEq, Eq, Debug)]
 /// A `MessageHTTP` is a representation of a HTTP message.
 pub struct MessageHTTP {
-    /// The first line of a HTTP message, either a RequestLine or a StatusLine. [Read more](http\start_line\enum.StartLine.html)
+    /// The first line of a HTTP message, either a `RequestLine` or a `StatusLine`. [Read more](start_line/enum.StartLine.html)
     pub start_line: StartLine,
     /// The fields of the HTTP message.
     pub header_fields: Vec<HeaderField>,

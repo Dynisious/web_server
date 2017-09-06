@@ -12,5 +12,5 @@ pub mod header_field;
 pub use std::string::String;
 pub use self::message::*;
 
-/// The methods recognised by a HTTP [message](http/struct.MessageHTTP.html).
+/// The methods recognised by a HTTP [message](struct.MessageHTTP.html).
 pub static HTTP_METHOD: [&'static str; 1] = ["GET"];
